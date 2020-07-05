@@ -1,0 +1,22 @@
+sudo: required
+services:
+    - docker
+
+before_install:
+    - docker build -t bhaskarpraveen/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+    - docker run bhaskarpraveen/react-test npm test -- --coverage
+
+after_success:
+    - docker build -t bhaskarpraveen/multi-client ./client
+    - docker build -t bhaskarpraveen/multi-nginx ./nginx
+    - docker build -t bhaskarpraveen/multi-server ./server
+    - docker build -t bhaskarpraveen/multi-worker ./worker
+    # Log in to the docker CLI
+    - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin 
+    # Take those images and push them to dockerhub
+    - docker push bhaskarpraveen/multi-client
+    - docker push bhaskarpraveen/multi-nginx
+    - docker push bhaskarpraveen/multi-server
+    - docker push bhaskarpraveen/multi-worker
